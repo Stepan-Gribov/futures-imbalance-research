@@ -1,0 +1,9 @@
+apimoex
+httpx
+jupyterlab
+matplotlib
+numpy
+openpyxl
+pandas
+requests
+scikit-learn

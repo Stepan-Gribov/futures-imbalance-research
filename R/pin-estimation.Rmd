@@ -1,0 +1,346 @@
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+```{r}
+library(InfoTrad)
+library(lubridate)
+library(ISOweek)
+library(ggplot2)
+library(tidyr)
+```
+
+```{r cars}
+rm(df)
+df = read.csv('data/OUT/Pos+quotes+volume+spread.csv')
+df = df[!(duplicated(df$isin) & duplicated(df$close)), ]
+rm(data)
+rm(df_f)
+
+ISIN = 'LKOH'
+
+
+df_f = subset(df, isin == ISIN)
+data=cbind(df_f$moment,df_f$isin,(df_f$close-df_f$X.SPREAD./2),(df_f$close+df_f$X.SPREAD./2))
+colnames(data) = c('moment','isin',"Buy", "Sell")
+
+Buy = as.double(data[,'Buy'])
+Sell = as.double(data[,'Sell'])
+sample=cbind(Buy,Sell)
+```
+
+Расчет по окнам в торговую неделю
+
+```{r}
+res_pin = data.frame(week_start = character(0), week_ends = character(0), pin = character(0))
+
+for (i in 1:51){
+  
+try({week_number = week(data[,1])
+  specific_week_data = data[week_number == i, ]
+  
+  Buy = as.double(specific_week_data[,'Buy'])
+  Sell = as.double(specific_week_data[,'Sell'])
+  sample_week=cbind(Buy,Sell)
+  
+  result=YZ(sample_week)
+  
+  res_pin[(nrow(res_pin) + 1),] = (c(specific_week_data[1][1],specific_week_data[nrow(specific_week_data)][1],result$PIN))
+})
+
+}
+
+```
+
+```{r}
+names(res_pin)[names(res_pin) == 'week_start'] = 'moment'
+merged_df = merge(df_f, res_pin, by = "moment", all.x = TRUE)
+merged_df = fill(merged_df,week_ends,pin)
+```
+
+```{r}
+
+```
+
+# Построение графика с двумя линиями
+
+```{r}
+
+y1 = as.numeric(merged_df$long_position_fiz)
+y2 = as.numeric(merged_df$close)
+x = as.Date(merged_df$moment)
+
+# Создание графика с основной линией по левой шкале
+plot(x, y1, type = "l", col = "blue", xlab = "Даты", ylab = "long_position")
+
+# Добавление второй линии по правой шкале
+par(new = TRUE)
+plot(x, y2, type = "l", col = "red", axes = FALSE, xlab = "", ylab = "")
+axis(side = 4)
+mtext(side = 4, line = 3, "Значения 2", col = "red")
+
+# Добавление легенды
+legend("topleft", legend = c("long_position", "close"), col = c("blue", "red"), lty = 1)
+
+# Добавление заголовка
+title(main = "График двух линий с датами и двумя шкалами")
+```
+
+```{r}
+y1 = as.numeric(merged_df$long_position_fiz)
+y2 = as.numeric(merged_df$close)
+x = as.Date(merged_df$moment)
+
+z1 = as.numeric(merged_df$pin)
+z2 = as.numeric(merged_df$X.SPREAD.)
+
+options(repr.plot.inline = FALSE)
+
+par(mar = c(1,1, 1, 1))
+
+par(pin = c(5, 2))
+
+# Установка параметра mfrow для создания двух графиков один под другим
+par(mfrow = c(2, 1))
+
+# Первый график
+plot(x, y1, type = "l", col = "blue", xlab = "Даты", ylab = "long_position")
+
+# Добавление второй линии по правой шкале
+par(new = TRUE)
+plot(x, y2, type = "l", col = "red", axes = FALSE, xlab = "", ylab = "")
+axis(side = 4)
+mtext(side = 4, line = 3, ISIN, col = "red")
+legend("topleft", legend = c("long_position", "close_price"), col = c("blue", "red"), lty = 1)
+
+
+# Второй график
+plot(x, z1, type = "l", col = "red", xlab = "Даты", ylab = "Значения 2a", ylim = c(0,1))
+lines(x, z2, col = "orange")
+legend("topleft", legend = c("PIN", "SPREAD"), col = c("red", "orange"), lty = 1)
+
+```
+
+```{r}
+rm(df)
+df = read.csv('data/OUT/Pos+quotes+volume+spread.csv')
+df = df[!(duplicated(df$isin) & duplicated(df$close)), ]
+
+ISIN = 'AFKS'
+
+rm(data)
+rm(df_f)
+
+df_f = subset(df, isin == ISIN)
+data=cbind(df_f$moment,df_f$isin,(df_f$close-df_f$X.SPREAD./2),(df_f$close+df_f$X.SPREAD./2))
+colnames(data) = c('moment','isin',"Buy", "Sell")
+
+Buy = as.double(data[,'Buy'])
+Sell = as.double(data[,'Sell'])
+sample=cbind(Buy,Sell)
+
+res_pin = data.frame(week_start = character(0), week_ends = character(0), pin = character(0))
+
+#loop for weekly pin
+
+for (i in 1:51){
+  
+try({week_number = week(data[,1])
+  specific_week_data = data[week_number == i, ]
+  
+  Buy = as.double(specific_week_data[,'Buy'])
+  Sell = as.double(specific_week_data[,'Sell'])
+  sample_week=cbind(Buy,Sell)
+  
+  result=YZ(sample_week)
+  
+  res_pin[(nrow(res_pin) + 1),] = (c(specific_week_data[1][1],specific_week_data[nrow(specific_week_data)][1],result$PIN))
+})
+
+}
+
+names(res_pin)[names(res_pin) == 'week_start'] = 'moment'
+merged_df = merge(df_f, res_pin, by = "moment", all.x = TRUE)
+merged_df = fill(merged_df,week_ends,pin)
+
+png("my_plot.png", width = 2000, height = 2000, res = 300)
+
+#Graphs
+
+y1 = as.numeric(merged_df$long_position_fiz)
+y2 = as.numeric(merged_df$close)
+x = as.Date(merged_df$moment)
+
+z1 = as.numeric(merged_df$pin)
+z2 = as.numeric(merged_df$X.SPREAD.)
+
+options(repr.plot.inline = FALSE)
+
+par(pin = c(5, 2))
+
+# Установка параметра mfrow для создания двух графиков один под другим
+par(mfrow = c(2, 1))
+
+# Первый график
+plot(x, y1, type = "l", col = "blue", xlab = "Даты", ylab = "long_position")
+
+# Добавление второй линии по правой шкале
+par(new = TRUE)
+plot(x, y2, type = "l", col = "red", axes = FALSE, xlab = "", ylab = "")
+axis(side = 4)
+mtext(side = 4, line = 3, "Значения 2", col = "red")
+legend("topleft", legend = c("long_position", "close_price"), col = c("blue", "red"), lty = 1)
+
+
+# Второй график
+plot(x, z1, type = "l", col = "red", xlab = "Даты", ylab = "Значения 2a", ylim = c(0,1))
+lines(x, z2, col = "orange")
+legend("topleft", legend = c("PIN", "SPREAD"), col = c("red", "orange"), lty = 1)
+
+dev.off
+```
+
+```{r}
+rm(df)
+rm(merged_df)
+
+df = read.csv('data/OUT/Pos+quotes+volume+spread.csv')
+df = df[!(duplicated(df$isin) & duplicated(df$close)), ]
+
+ISIN = 'AFKS'
+
+rm(data)
+rm(df_f)
+
+df_f = subset(df, isin == ISIN)
+df_f$X.SPREAD.=df_f$X.SPREAD.*100
+data=cbind(df_f$moment,df_f$isin,(df_f$close-df_f$X.SPREAD./2),(df_f$close+df_f$X.SPREAD./2))
+colnames(data) = c('moment','isin',"Buy", "Sell")
+
+Buy = as.double(data[,'Buy'])
+Sell = as.double(data[,'Sell'])
+sample=cbind(Buy,Sell)
+
+res_pin = data.frame(week_start = character(0), week_ends = character(0), pin = character(0))
+
+for (i in 1:51){
+  
+try({week_number = week(data[,1])
+  specific_week_data = data[week_number == i, ]
+  
+  Buy = as.double(specific_week_data[,'Buy'])
+  Sell = as.double(specific_week_data[,'Sell'])
+  sample_week=cbind(Buy,Sell)
+  
+  result=YZ(sample_week)
+  
+  res_pin[(nrow(res_pin) + 1),] = (c(specific_week_data[1][1],specific_week_data[nrow(specific_week_data)][1],result$PIN))
+})
+
+}
+
+names(res_pin)[names(res_pin) == 'week_start'] = 'moment'
+merged_df = merge(df_f, res_pin, by = "moment", all.x = TRUE)
+merged_df = fill(merged_df,week_ends,pin)
+
+
+```
+
+```         
+```
+
+```         
+```
+
+```{r}
+rm(list=ls()) 
+
+df = read.csv('data/OUT/Pos+quotes+volume+spread.csv')
+df = df[!(duplicated(df$isin) & duplicated(df$close)), ]
+
+ISIN = 'FEES'
+
+rm(data)
+rm(df_f)
+
+df_f = subset(df, isin == ISIN)
+df_f$X.SPREAD.=df_f$X.SPREAD.*100
+data=cbind(df_f$moment,df_f$isin,(df_f$close-df_f$X.SPREAD./2),(df_f$close+df_f$X.SPREAD./2))
+colnames(data) = c('moment','isin',"Buy", "Sell")
+
+Buy = as.double(data[,'Buy'])
+Sell = as.double(data[,'Sell'])
+sample=cbind(Buy,Sell)
+
+res_pin = data.frame(week_start = character(0), week_ends = character(0), pin = character(0))
+
+```
+
+```{r}
+for (i in 1:51){
+  
+try({week_number = week(data[,1])
+  specific_week_data = data[week_number == i, ]
+  
+  Buy = as.double(specific_week_data[,'Buy'])
+  Sell = as.double(specific_week_data[,'Sell'])
+  sample_week=cbind(Buy,Sell)
+  
+  result=YZ(sample_week)
+  
+  res_pin[(nrow(res_pin) + 1),] = (c(specific_week_data[1][1],specific_week_data[nrow(specific_week_data)][1],result$PIN))
+})
+
+}
+```
+
+```{r}
+names(res_pin)[names(res_pin) == 'week_start'] = 'moment'
+merged_df = merge(df_f, res_pin, by = "moment", all.x = TRUE)
+merged_df = fill(merged_df,week_ends,pin)
+```
+
+```{r}
+png(paste(ISIN, '.png', sep = ""), width = 2000, height = 2000, res = 300)
+
+#Graphs
+
+y1 = as.numeric(merged_df$long_position_fiz)
+y2 = as.numeric(merged_df$close)
+x = as.Date(merged_df$moment)
+
+z1 = as.numeric(merged_df$pin)
+z2 = as.numeric(merged_df$X.SPREAD.)
+
+options(repr.plot.inline = FALSE)
+
+par(pin = c(5, 2))
+
+# Установка параметра mfrow для создания двух графиков один под другим
+par(mfrow = c(2, 1))
+
+# Первый график
+plot(x, y1, type = "l", col = "blue", xlab = "Даты", ylab = "long_position")
+
+# Добавление второй линии по правой шкале
+par(new = TRUE)
+plot(x, y2, type = "l", col = "red", axes = FALSE, xlab = "", ylab = "")
+axis(side = 4)
+mtext(side = 4, line = 2, ISIN, col = "red")
+legend("topleft", legend = c("long_position", "close_price"), col = c("blue", "red"), lty = 1)
+
+
+# Второй график
+plot(x, z1, type = "l", col = "red", xlab = "Даты", ylab = "pin", ylim = c(0,1))
+par(new = TRUE)
+plot(x, z2, type = "l", col = "orange", axes = FALSE, xlab = "", ylab = "")
+axis(side = 4)
+mtext(side = 4, line = 2, 'Spread')
+legend("topleft", legend = c("PIN", "SPREAD"), col = c("red", "orange"), lty = 1)
+
+dev.off
+```
+
+```{r}
+
+```
